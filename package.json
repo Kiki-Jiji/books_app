@@ -1,0 +1,8 @@
+{
+  "name": "book_app",
+  "private": true,
+  "scripts": {
+    "dev": "vite"
+  }
+}
+

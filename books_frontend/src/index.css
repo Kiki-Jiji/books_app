@@ -1,0 +1,139 @@
+/* --- Global Reset & KDP Theme --- */
+:root {
+  color: #213547;
+  background-color: #ffffff;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: Arial, sans-serif;
+}
+
+.app-container {
+  padding: 40px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* --- KDP Header Bar --- */
+.kdp-header {
+  background-color: #333333;
+  width: 100%;
+  padding: 12px 0;
+  display: flex;
+}
+
+.header-content {
+  padding-left: 40px;
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.kindle-logo {
+  color: #ffffff;
+  font-weight: bold;
+  font-size: 26px;
+  letter-spacing: -1px;
+}
+
+.direct-publishing {
+  color: #ffffff;
+  font-weight: 300;
+  font-size: 24px;
+}
+
+/* --- Date Filter Section --- */
+.date-filter-container {
+  display: flex;
+  align-items: flex-end; /* Keeps inputs and quick-links aligned at bottom */
+  gap: 40px;
+  padding-bottom: 20px;
+  margin-bottom: 25px;
+  border-bottom: 2px solid #17929d;
+}
+
+.inputs-side {
+  display: flex;
+  gap: 15px;
+}
+
+.filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.filter-group label {
+  font-weight: 700;
+  color: #1a365d;
+  font-size: 1.1rem;
+}
+
+.filter-group input[type="date"] {
+  padding: 12px 15px;
+  font-size: 1.4rem;
+  font-family: 'Courier New', Courier, monospace;
+  color: #1a365d;
+  border: 1px solid #888;
+  border-radius: 8px;
+  width: 220px;
+}
+
+/* Calendar Icon customization */
+input[type="date"]::-webkit-calendar-picker-indicator {
+  background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="%231a365d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>');
+  width: 24px;
+  height: 24px;
+  cursor: pointer;
+}
+
+/* Container for both columns */
+.quick-select-container {
+  display: flex;
+  flex-direction: row; 
+  gap: 30px;
+  padding-left: 20px;
+  border-left: 1px solid #ddd;
+  align-items: flex-start; /* Ensures columns start at the top */
+}
+
+/* Individual vertical columns */
+.quick-column {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start; /* Keeps text left-aligned */
+  gap: 4px;
+}
+
+/* Label styling (Range/View) */
+.quick-label {
+  font-family: "Times New Roman", Times, serif;
+  font-size: 1.4rem;
+  color: #1a365d;
+  margin: 0 0 5px 0;
+  display: block;
+}
+
+/* The actual buttons - forcing them to look like links */
+.quick-column button {
+  all: unset; /* This kills the gray background and border! */
+  color: #17929d;
+  font-size: 1.1rem;
+  font-family: Arial, sans-serif;
+  cursor: pointer;
+  text-decoration: underline;
+  display: inline-block;
+  line-height: 1.4;
+}
+
+.quick-column button:hover {
+  color: #12747d;
+  text-decoration: none;
+}
+
+/* Ensuring buttons don't have a focus border that looks like a box */
+.quick-column button:focus {
+  outline: none;
+}
