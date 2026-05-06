@@ -3,6 +3,8 @@
   "private": true,
   "scripts": {
     "dev": "vite"
+  },
+  "dependencies": {
+    "react-router-dom": "^7.15.0"
   }
 }
-

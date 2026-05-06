@@ -90,13 +90,14 @@ def get_daily_sales(start_date: str = None, end_date: str = None, group_by: str 
 
     return daily_sum.to_dict(orient='records')
 
+@app.get("/get_day_week_sales")
 def get_day_week_sales(start_date: str = None, end_date: str = None,):
     cfg = config()
     conn = connect_to_db()
 
 
-    start_date = "2026-03-01"
-    end_date = "2026-06-31"
+    # start_date = "2026-03-01"
+    # end_date = "2026-06-31"
 
     select_query = select(columns=['date', 'royalty'], start_date=start_date, end_date=end_date)
     df = pd.read_sql_query(select_query, conn)
