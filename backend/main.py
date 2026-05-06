@@ -62,12 +62,12 @@ def get_daily_sales(start_date: str = None, end_date: str = None, group_by: str 
 
 
     elif group_by == 'month':
-        monthly_sum = df.resample('ME', on='date')['royalty'].sum().to_frame()
+        daily_sum = df.resample('ME', on='date')['royalty'].sum().to_frame()
 
         # 2. Get current time context
         # If you are running this on historical data, 'today' should be the max date in your df
         today = pd.Timestamp(datetime.now().date()) 
-        last_entry_date = monthly_sum.index[-1]
+        last_entry_date = daily_sum.index[-1]
 
         # 3. Check if the latest entry is the current, incomplete month
         if last_entry_date.month == today.month and last_entry_date.year == today.year:
@@ -80,7 +80,7 @@ def get_daily_sales(start_date: str = None, end_date: str = None, group_by: str 
                 scaling_factor = total_days_in_month / days_passed
                 
                 # Apply the estimate to the last row
-                monthly_sum.iloc[-1, monthly_sum.columns.get_loc('royalty')] *= scaling_factor
+                daily_sum.iloc[-1, daily_sum.columns.get_loc('royalty')] *= scaling_factor
     else:
         daily_sum = df.groupby('date')['royalty'].sum()
 
