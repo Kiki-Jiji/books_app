@@ -10,15 +10,15 @@ import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 function App() {
   return (
     <Router>
-      <Sidebar />
-      <div className="app-container">
-        <Header />
-
-        <Routes>
-          <Route path="/" element={<DashboardPage />} />
-          <Route path="/weekly" element={<Weekly />} />
-          {/* Add more routes for other pages here */}
-        </Routes>
+      <Header />
+      <div className="layout">
+        <Sidebar />
+        <div className="main-content">
+          <Routes>
+            <Route path="/" element={<DashboardPage />} />
+            <Route path="/weekly" element={<Weekly />} />
+          </Routes>
+        </div>
       </div>
     </Router>
   );

@@ -1,17 +1,19 @@
 import os
 import sqlite3
+from dotenv import load_dotenv
+
+load_dotenv()
 
 
 def config():
     return {
         'db_name': 'test.db',
         'table_name': 'sales',
-        'db_path': "/mnt/c/Users/joshu/Documents/code/books2/test.db",
     }
 
 
 
-def select(columns, start_date = None, end_date = None, date_column="date"):
+def select(columns, start_date = None, end_date = None, date_column="date", title=None):
     """
     Generates a SQL SELECT statement filtered by a date range.
     
@@ -42,6 +44,9 @@ def select(columns, start_date = None, end_date = None, date_column="date"):
         conditions.append(f"{date_column} >= '{start_date}'")
     if end_date:
         conditions.append(f"{date_column} <= '{end_date}'")
+    if title:
+        escaped = title.replace("'", "''")
+        conditions.append(f"title = '{escaped}'")
 
     # If we have conditions, append the WHERE clause
     if conditions:
@@ -54,8 +59,9 @@ def select(columns, start_date = None, end_date = None, date_column="date"):
 
 def connect_to_db():
 
-    # WSL path translation
-    db_path = config()['db_path']
+    db_path = os.environ.get('DB_PATH')
+    if not db_path:
+        raise ValueError("Environment variable 'DB_PATH' is not set. Please set it in backend/.env.")
 
     # Good practice: Verify the file is actually visible to WSL first
     if os.path.exists(db_path):
@@ -64,4 +70,5 @@ def connect_to_db():
     else:
         print(f"Error: WSL cannot find the file at {db_path}")
         print("Check if the folder name or spelling is slightly different in Linux (case-sensitive!)")
+        raise FileNotFoundError(f"WSL cannot find the file at {db_path}")
     return conn

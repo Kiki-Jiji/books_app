@@ -15,11 +15,22 @@ function Weekly() {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [totalRoyalties, setTotalRoyalties] = useState(0);
+  const [books, setBooks] = useState([]);
+  const [selectedBook, setSelectedBook] = useState('');
+
+  // --- Fetch book list ---
+  useEffect(() => {
+    fetch('http://localhost:8000/books')
+      .then(res => res.json())
+      .then(setBooks)
+      .catch(err => console.error('Error loading books:', err));
+  }, []);
 
   // --- Data Fetching ---
   useEffect(() => {
     setLoading(true);
-    fetch(`http://localhost:8000/get_day_week_sales?start_date=${startDate}&end_date=${endDate}`) // Adjust the endpoint as needed
+    const titleParam = selectedBook ? `&title=${encodeURIComponent(selectedBook)}` : '';
+    fetch(`http://localhost:8000/get_day_week_sales?start_date=${startDate}&end_date=${endDate}${titleParam}`) // Adjust the endpoint as needed
       .then(res => res.json())
       .then(jsonData => {
         const transformedData = Object.entries(jsonData).map(([day, amount]) => ({
@@ -35,7 +46,7 @@ function Weekly() {
         console.error('Error loading data:', err);
         setLoading(false);
       });
-  }, [startDate, endDate]);
+  }, [startDate, endDate, selectedBook]);
 
   if (loading) {
     return <div>Loading...</div>;
@@ -49,7 +60,14 @@ function Weekly() {
         setStartDate={setStartDate}
         endDate={endDate}
         setEndDate={setEndDate}
-         setRange={setRange}
+        setRange={(days) => {
+          const { startDate, endDate } = setRange(days);
+          setStartDate(startDate);
+          setEndDate(endDate);
+        }}
+        books={books}
+        selectedBook={selectedBook}
+        setSelectedBook={setSelectedBook}
       />
       {/* Chart Section */}
       <ResponsiveContainer width="100%" height={400}>

@@ -23,20 +23,38 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
 @app.get("/")
 def read_root():
     return {"Hello": "World"}
 
 @app.get("/books")
 def get_books():
-    return {"books": []}
+    """
+    example return
 
-@app.get("/daily-sales")
-def get_daily_sales(start_date: str = None, end_date: str = None, group_by: str = 'day'):
+    [{'title': 'Coming Home to Kingsbridge'},
+    {'title': 'Happily Ever After in Hope Cove'},
+    {'title': 'Healing the Heartbreak: Moving on in Devon'},
+    {'title': 'The Worst Christmas Ever?: Christmas in Devon'},
+    ]
+    """
     cfg = config()
     conn = connect_to_db()
 
-    select_query = select(columns=['date', 'royalty'], start_date=start_date, end_date=end_date)
+    distinct_books_sql = f"SELECT DISTINCT title FROM {cfg['table_name']};"
+    df = pd.read_sql_query(distinct_books_sql, conn)
+
+    conn.close()
+    return df.to_dict(orient='records')
+
+
+@app.get("/daily-sales")
+def get_daily_sales(start_date: str = None, end_date: str = None, group_by: str = 'day', title: str = None):
+    cfg = config()
+    conn = connect_to_db()
+
+    select_query = select(columns=['date', 'royalty'], start_date=start_date, end_date=end_date, title=title)
     df = pd.read_sql_query(select_query, conn)
     conn.close()
 
@@ -91,15 +109,11 @@ def get_daily_sales(start_date: str = None, end_date: str = None, group_by: str 
     return daily_sum.to_dict(orient='records')
 
 @app.get("/get_day_week_sales")
-def get_day_week_sales(start_date: str = None, end_date: str = None,):
+def get_day_week_sales(start_date: str = None, end_date: str = None, title: str = None):
     cfg = config()
     conn = connect_to_db()
 
-
-    # start_date = "2026-03-01"
-    # end_date = "2026-06-31"
-
-    select_query = select(columns=['date', 'royalty'], start_date=start_date, end_date=end_date)
+    select_query = select(columns=['date', 'royalty'], start_date=start_date, end_date=end_date, title=title)
     df = pd.read_sql_query(select_query, conn)
     conn.close()
 

@@ -1,24 +1,24 @@
+"""
+This script is just for playing with the database and testing out queries. 
+"""
+
+
 import sqlite3
 import os
+import pandas as pd
+from functions import connect_to_db, config
 
 
+config_data = config()
+
+conn = connect_to_db()
 
 
+sql = f"SELECT * FROM {config_data['table_name']};"
 
+df = pd.read_sql_query(sql, conn)
 
-def connect_to_db(db_path):
-
-    # WSL path translation
-    db_path = "/mnt/c/Users/joshu/Documents/code/books2/test.db"
-
-    # Good practice: Verify the file is actually visible to WSL first
-    if os.path.exists(db_path):
-        conn = sqlite3.connect(db_path)
-        print("Connection Successful")
-    else:
-        print(f"Error: WSL cannot find the file at {db_path}")
-        print("Check if the folder name or spelling is slightly different in Linux (case-sensitive!)")
-    return conn
+conn.close()
 
 
 

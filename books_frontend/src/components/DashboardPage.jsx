@@ -18,11 +18,22 @@ function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [totalRoyalties, setTotalRoyalties] = useState(0);
   const [groupBy, setGroupBy] = useState('day');
+  const [books, setBooks] = useState([]);
+  const [selectedBook, setSelectedBook] = useState('');
+
+  // --- Fetch book list ---
+  useEffect(() => {
+    fetch('http://localhost:8000/books')
+      .then(res => res.json())
+      .then(setBooks)
+      .catch(err => console.error('Error loading books:', err));
+  }, []);
 
   // --- Data Fetching ---
   useEffect(() => {
     setLoading(true);
-    fetch(`http://localhost:8000/daily-sales?start_date=${startDate}&end_date=${endDate}&group_by=${groupBy}`)
+    const titleParam = selectedBook ? `&title=${encodeURIComponent(selectedBook)}` : '';
+    fetch(`http://localhost:8000/daily-sales?start_date=${startDate}&end_date=${endDate}&group_by=${groupBy}${titleParam}`)
       .then(res => res.json())
       .then(jsonData => {
         const transformedData = jsonData.map(item => ({
@@ -38,7 +49,7 @@ function DashboardPage() {
         console.error('Error loading data:', err);
         setLoading(false);
       });
-  }, [startDate, endDate, groupBy]);
+  }, [startDate, endDate, groupBy, selectedBook]);
 
   if (loading) {
     return <div className="app-container">Loading...</div>;
@@ -51,8 +62,15 @@ function DashboardPage() {
         setStartDate={setStartDate}
         endDate={endDate}
         setEndDate={setEndDate}
-        setRange={setRange}
+        setRange={(days) => {
+          const { startDate, endDate } = setRange(days);
+          setStartDate(startDate);
+          setEndDate(endDate);
+        }}
         setGroupBy={setGroupBy}
+        books={books}
+        selectedBook={selectedBook}
+        setSelectedBook={setSelectedBook}
       />
       {/* Royalties Summary Section */}
       <RoyaltiesSummary
