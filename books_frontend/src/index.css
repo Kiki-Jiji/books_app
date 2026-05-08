@@ -1,4 +1,20 @@
 /* --- Global Reset & KDP Theme --- */
+html {
+  font-size: 16px;
+}
+
+@media (min-width: 1600px) {
+  html {
+    font-size: 14px;
+  }
+}
+
+@media (min-width: 1920px) {
+  html {
+    font-size: 13px;
+  }
+}
+
 :root {
   color: #213547;
   background-color: #ffffff;
@@ -135,6 +151,18 @@ body {
   padding: 40px;
   max-width: 1200px;
   margin: 0 auto;
+}
+
+@media (min-width: 1600px) {
+  .app-container {
+    max-width: 1500px;
+  }
+}
+
+@media (min-width: 1920px) {
+  .app-container {
+    max-width: 1800px;
+  }
 }
 
 /* --- KDP Header Bar --- */

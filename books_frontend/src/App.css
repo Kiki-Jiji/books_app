@@ -5,6 +5,18 @@
   padding: 40px 20px;
 }
 
+@media (min-width: 1600px) {
+  .app-container {
+    max-width: 1600px;
+  }
+}
+
+@media (min-width: 1920px) {
+  .app-container {
+    max-width: 1900px;
+  }
+}
+
 .chart-section {
   background-color: white;
   border-radius: 8px;
