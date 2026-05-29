@@ -14,13 +14,16 @@ config_data = config()
 conn = connect_to_db()
 
 
-sql = f"SELECT * FROM {config_data['table_name']};"
+sql = f"SELECT * FROM {config_data['table_name_ad']};"
 
 df = pd.read_sql_query(sql, conn)
 
 conn.close()
+df
 
+df.groupby('campaignName')['cost'].sum()
 
+df = df[df['cost'] > 0]
 
 # config = config()
 # db_name = config['db_name']

@@ -1,6 +1,10 @@
 import os
 import sqlite3
+import calendar
+from datetime import datetime
+import pandas as pd
 from dotenv import load_dotenv
+from models import DailySalesRecord
 
 load_dotenv()
 
@@ -9,6 +13,9 @@ def config():
     return {
         'db_name': 'test.db',
         'table_name': 'sales',
+        'table_name_ad': 'amazon_ad_data',
+        'groups_table_name': 'groups',
+        'book_group_table_name': 'book_to_group'
     }
 
 
@@ -45,8 +52,13 @@ def select(columns, start_date = None, end_date = None, date_column="date", titl
     if end_date:
         conditions.append(f"{date_column} <= '{end_date}'")
     if title:
-        escaped = title.replace("'", "''")
-        conditions.append(f"title = '{escaped}'")
+        if isinstance(title, list):
+            escaped = [t.replace("'", "''") for t in title]
+            in_clause = ", ".join(f"'{t}'" for t in escaped)
+            conditions.append(f"title IN ({in_clause})")
+        else:
+            escaped = title.replace("'", "''")
+            conditions.append(f"title = '{escaped}'")
 
     # If we have conditions, append the WHERE clause
     if conditions:
@@ -72,3 +84,41 @@ def connect_to_db():
         print("Check if the folder name or spelling is slightly different in Linux (case-sensitive!)")
         raise FileNotFoundError(f"WSL cannot find the file at {db_path}")
     return conn
+
+
+def aggregate_royalties(df, group_by='day'):
+    df['date'] = pd.to_datetime(df['date'])
+
+    if group_by == 'week':
+        daily_sum = df.resample('W-MON', on='date')['royalty'].sum()
+        last_date = daily_sum.index[-1]
+        today = pd.Timestamp(datetime.now().date())
+
+        start_of_week = last_date - pd.Timedelta(days=6)
+        days_passed = (today - start_of_week).days + 1
+
+        if 0 < days_passed < 7:
+            scaling_factor = 7 / days_passed
+            daily_sum.iloc[-1] *= scaling_factor
+
+    elif group_by == 'month':
+        daily_sum = df.resample('ME', on='date')['royalty'].sum().to_frame()
+
+        today = pd.Timestamp(datetime.now().date())
+        last_entry_date = daily_sum.index[-1]
+
+        if last_entry_date.month == today.month and last_entry_date.year == today.year:
+            days_passed = today.day
+            _, total_days_in_month = calendar.monthrange(today.year, today.month)
+
+            if days_passed < total_days_in_month:
+                scaling_factor = total_days_in_month / days_passed
+                daily_sum.iloc[-1, daily_sum.columns.get_loc('royalty')] *= scaling_factor
+    else:
+        daily_sum = df.groupby('date')['royalty'].sum()
+
+    daily_sum = pd.DataFrame(daily_sum).reset_index()
+    daily_sum['date'] = daily_sum['date'].dt.strftime('%Y-%m-%d')
+    daily_sum['royalty'] = daily_sum['royalty'].round(2)
+
+    return [DailySalesRecord(**r) for r in daily_sum.to_dict(orient='records')]

@@ -2,7 +2,7 @@
 import React from 'react';
 import '../App.css';
 
-function FilterSection({ startDate, setStartDate, endDate, setEndDate, setRange, setGroupBy, books, selectedBook, setSelectedBook }) {
+function FilterSection({ startDate, setStartDate, endDate, setEndDate, setRange, setGroupBy, books, selectedBook, setSelectedBook, groups, selectedGroup, setSelectedGroup, filterMode, setFilterMode }) {
   return (
     <div className="date-filter-container">
       <div className="inputs-side">
@@ -28,7 +28,27 @@ function FilterSection({ startDate, setStartDate, endDate, setEndDate, setRange,
           </div>
         </div>
 
-        {books && (
+        {books && groups && setFilterMode && (
+          <div className="filter-group">
+            <label>Filter By</label>
+            <div className="input-wrapper">
+              <select
+                value={filterMode}
+                onChange={(e) => {
+                  setFilterMode(e.target.value);
+                  setSelectedBook('');
+                  setSelectedGroup('');
+                }}
+                className="book-select"
+              >
+                <option value="book">Book</option>
+                <option value="series">Book Series</option>
+              </select>
+            </div>
+          </div>
+        )}
+
+        {books && filterMode !== 'series' && (
           <div className="filter-group">
             <label>Book</label>
             <div className="input-wrapper">
@@ -40,6 +60,24 @@ function FilterSection({ startDate, setStartDate, endDate, setEndDate, setRange,
                 <option value="">All Books</option>
                 {books.map((b) => (
                   <option key={b.title} value={b.title}>{b.title}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+        )}
+
+        {groups && filterMode === 'series' && (
+          <div className="filter-group">
+            <label>Series</label>
+            <div className="input-wrapper">
+              <select
+                value={selectedGroup}
+                onChange={(e) => setSelectedGroup(e.target.value)}
+                className="book-select"
+              >
+                <option value="">All Series</option>
+                {groups.map((g) => (
+                  <option key={g.group_name} value={g.group_name}>{g.group_name}</option>
                 ))}
               </select>
             </div>

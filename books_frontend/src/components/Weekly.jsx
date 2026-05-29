@@ -17,23 +17,55 @@ function Weekly() {
   const [totalRoyalties, setTotalRoyalties] = useState(0);
   const [books, setBooks] = useState([]);
   const [selectedBook, setSelectedBook] = useState('');
+  const [groups, setGroups] = useState([]);
+  const [bookGroups, setBookGroups] = useState({});
+  const [selectedGroup, setSelectedGroup] = useState('');
+  const [filterMode, setFilterMode] = useState('series');
 
-  // --- Fetch book list ---
+  // --- Fetch book list, groups, and book-group mappings ---
   useEffect(() => {
-    fetch('http://localhost:8000/books')
-      .then(res => res.json())
-      .then(setBooks)
-      .catch(err => console.error('Error loading books:', err));
+    Promise.all([
+      fetch('http://localhost:8000/books').then(r => r.json()),
+      fetch('http://localhost:8000/get_existing_groups').then(r => r.json()),
+      fetch('http://localhost:8000/get_book_groups').then(r => r.json()),
+    ])
+      .then(([booksData, groupsData, bookGroupsData]) => {
+        setBooks(booksData);
+        setGroups(groupsData);
+        const map = {};
+        bookGroupsData.forEach(({ book, group_name }) => {
+          map[book] = group_name;
+        });
+        setBookGroups(map);
+      })
+      .catch(err => console.error('Error loading data:', err));
   }, []);
 
   // --- Data Fetching ---
   useEffect(() => {
     setLoading(true);
-    const titleParam = selectedBook ? `&title=${encodeURIComponent(selectedBook)}` : '';
-    fetch(`http://localhost:8000/get_day_week_sales?start_date=${startDate}&end_date=${endDate}${titleParam}`) // Adjust the endpoint as needed
+
+    let titleParams = '';
+    if (filterMode === 'series' && selectedGroup) {
+      const titlesInGroup = Object.entries(bookGroups)
+        .filter(([, group]) => group === selectedGroup)
+        .map(([book]) => book);
+      titleParams = '&' + titlesInGroup.map(t => `title=${encodeURIComponent(t)}`).join('&');
+    } else if (filterMode === 'book' && selectedBook) {
+      titleParams = `&title=${encodeURIComponent(selectedBook)}`;
+    }
+
+    fetch(`http://localhost:8000/get_day_week_sales?start_date=${startDate}&end_date=${endDate}${titleParams}`)
       .then(res => res.json())
       .then(jsonData => {
-        const transformedData = Object.entries(jsonData).map(([day, amount]) => ({
+        // Aggregate day/royalty records across all titles
+        const dayTotals = {};
+        jsonData.forEach(entry => {
+          entry.records.forEach(({ day, royalty }) => {
+            dayTotals[day] = (dayTotals[day] || 0) + royalty;
+          });
+        });
+        const transformedData = Object.entries(dayTotals).map(([day, amount]) => ({
           day,
           amount
         }));
@@ -46,7 +78,7 @@ function Weekly() {
         console.error('Error loading data:', err);
         setLoading(false);
       });
-  }, [startDate, endDate, selectedBook]);
+  }, [startDate, endDate, selectedBook, filterMode, selectedGroup, bookGroups]);
 
   if (loading) {
     return <div>Loading...</div>;
@@ -68,6 +100,11 @@ function Weekly() {
         books={books}
         selectedBook={selectedBook}
         setSelectedBook={setSelectedBook}
+        groups={groups}
+        selectedGroup={selectedGroup}
+        setSelectedGroup={setSelectedGroup}
+        filterMode={filterMode}
+        setFilterMode={setFilterMode}
       />
       {/* Chart Section */}
       <ResponsiveContainer width="100%" height={400}>
