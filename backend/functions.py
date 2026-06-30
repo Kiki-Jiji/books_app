@@ -4,14 +4,14 @@ import calendar
 from datetime import datetime
 import pandas as pd
 from dotenv import load_dotenv
-from models import DailySalesRecord
+from models import DailySalesRecord, AdSpendRoyaltyRecord
 
 load_dotenv()
 
 
 def config():
     return {
-        'db_name': 'test.db',
+        # 'db_name': 'test.db',
         'table_name': 'sales',
         'table_name_ad': 'amazon_ad_data',
         'groups_table_name': 'groups',
@@ -122,3 +122,64 @@ def aggregate_royalties(df, group_by='day'):
     daily_sum['royalty'] = daily_sum['royalty'].round(2)
 
     return [DailySalesRecord(**r) for r in daily_sum.to_dict(orient='records')]
+
+
+def ad_spend_vs_royalties(conn, start_date=None, end_date=None, group_by='day'):
+    """
+    Returns a merged time series of royalties (from the sales table) and ad
+    spend / impressions / clicks (from the amazon_ad_data table), aggregated by
+    `group_by` ('day' | 'week' | 'month').
+
+    NOTE: Unlike `aggregate_royalties`, this intentionally does NOT scale the
+    final partial week/month bucket. For an honest spend-vs-earnings comparison
+    we want the actual values in each bucket, not a projected final bucket.
+    """
+    cfg = config()
+
+    # --- Royalties from the sales table (reuse the shared query builder) ---
+    royalties_query = select(columns=['date', 'royalty'], start_date=start_date, end_date=end_date)
+    royalties_df = pd.read_sql_query(royalties_query, conn)
+    royalties_df['date'] = pd.to_datetime(royalties_df['date'])
+    royalties_daily = royalties_df.groupby('date')['royalty'].sum()
+
+    # --- Ad spend / impressions / clicks from the ad table ---
+    # Each (date, campaignId) belongs to a single date_collected snapshot, so a
+    # plain SUM(cost) GROUP BY date is correct (no snapshot double-counting).
+    ad_table = cfg['table_name_ad']
+    conditions = []
+    if start_date:
+        conditions.append(f"date >= '{start_date}'")
+    if end_date:
+        conditions.append(f"date <= '{end_date}'")
+    where_clause = (" WHERE " + " AND ".join(conditions)) if conditions else ""
+    ad_query = (
+        f"SELECT date, SUM(cost) AS ad_cost, SUM(impressions) AS impressions, "
+        f"SUM(clicks) AS clicks FROM {ad_table}{where_clause} GROUP BY date;"
+    )
+    ad_df = pd.read_sql_query(ad_query, conn)
+    ad_df['date'] = pd.to_datetime(ad_df['date'])
+    ad_daily = ad_df.set_index('date')[['ad_cost', 'impressions', 'clicks']]
+
+    # --- Merge daily series (outer join keeps spend-only and sales-only days) ---
+    merged = pd.concat([royalties_daily, ad_daily], axis=1).fillna(0).sort_index()
+
+    # --- Resample by the requested period (no last-bucket scaling, see note) ---
+    if group_by == 'week':
+        merged = merged.resample('W-MON').sum()
+    elif group_by == 'month':
+        merged = merged.resample('ME').sum()
+    # 'day' -> already daily
+
+    merged = merged.reset_index()
+    merged['date'] = merged['date'].dt.strftime('%Y-%m-%d')
+
+    return [
+        AdSpendRoyaltyRecord(
+            date=r['date'],
+            royalty=round(float(r['royalty']), 2),
+            ad_cost=round(float(r['ad_cost']), 2),
+            impressions=int(r['impressions']),
+            clicks=int(r['clicks']),
+        )
+        for r in merged.to_dict(orient='records')
+    ]

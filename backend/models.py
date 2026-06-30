@@ -21,3 +21,12 @@ class DayWeekSalesRecord:
 class TitleDayWeekSalesRecord:
     title: str
     records: list[DayWeekSalesRecord]
+
+
+@dataclass
+class AdSpendRoyaltyRecord:
+    date: str
+    royalty: float
+    ad_cost: float
+    impressions: int
+    clicks: int

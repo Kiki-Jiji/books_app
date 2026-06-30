@@ -2,9 +2,9 @@ from fastapi import FastAPI, HTTPException, UploadFile, File, Query
 from fastapi.staticfiles import StaticFiles
 import pandas as pd
 import sqlite3
-from functions import config, select, connect_to_db, aggregate_royalties
+from functions import config, select, connect_to_db, aggregate_royalties, ad_spend_vs_royalties
 from fastapi.middleware.cors import CORSMiddleware
-from models import DailySalesRecord, TitleDailySalesRecord, DayWeekSalesRecord, TitleDayWeekSalesRecord
+from models import DailySalesRecord, TitleDailySalesRecord, DayWeekSalesRecord, TitleDayWeekSalesRecord, AdSpendRoyaltyRecord
 from manage_db import migrate_groups_add_image
 import os
 import shutil
@@ -90,6 +90,14 @@ def get_daily_sales_multiple(start_date: str = None, end_date: str = None, group
         results.append(TitleDailySalesRecord(title=title, records=records))
 
     return results
+
+@app.get("/ad-spend-vs-royalties")
+def get_ad_spend_vs_royalties(start_date: str = None, end_date: str = None, group_by: str = 'day') -> list[AdSpendRoyaltyRecord]:
+    conn = connect_to_db()
+    result = ad_spend_vs_royalties(conn, start_date, end_date, group_by)
+    conn.close()
+    return result
+
 
 @app.get("/get_day_week_sales")
 def get_day_week_sales(start_date: str = None, end_date: str = None, title: list[str] = Query(default=None)) -> list[TitleDayWeekSalesRecord]:

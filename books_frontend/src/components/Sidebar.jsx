@@ -65,6 +65,9 @@ function Sidebar() {
               <Link to="/weekly" className={`sidebar-subitem ${location.pathname === '/weekly' ? 'active' : ''}`}>
                 Weekly
               </Link>
+              <Link to="/analytics" className={`sidebar-subitem ${location.pathname === '/analytics' ? 'active' : ''}`}>
+                Ad Spend
+              </Link>
             </div>
           )}
         </div>
